@@ -14,9 +14,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-const WIDTH int = 240
-const HEIGHT int = 180
-const SCALE int = 8
+const WIDTH int = 192
+const HEIGHT int = 144
+const SCALE int = 12
 const TICK_SPEED int = 2
 
 type Game struct {
@@ -54,22 +54,15 @@ func (g *Game) CountLiveNeighbors(x, y int) int {
 	return count
 }
 
-// TODO: Function for using mouse to draw / remove cells
-func (g *Game) AlterCells() {
-}
-
 // TODO: Function to zoom in and out on the grid
 func (g *Game) Zoom() {}
 
 func (g *Game) HandlePause() {
 	//NOTE: this isnt perfect but it works well enough
-
 	// Pause the game
-	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		// if key is pressed for longer than TICK_SPEED game ticks
-		if inpututil.KeyPressDuration(ebiten.KeySpace) >= 5 {
-			g.paused = !g.paused
-		}
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		// if key is pressed for longer than 5 game ticks
+		g.paused = !g.paused
 	}
 }
 
@@ -105,33 +98,27 @@ func (g *Game) Update() error {
 			// set grid to equal our new grid state
 			g.grid = newGrid
 		}
+	} else if g.paused {
+		// Allow user to draw their own cells when paused
+		x, y := ebiten.CursorPosition()
+		if g.paused && ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) == true {
+			g.grid[x][y] = true
+		}
+
 	}
 
 	return nil
-}
-
-func drawCube(screen *ebiten.Image, x int, y int) {
-	vector.DrawFilledRect(screen, float32(x), float32(y), float32(x*SCALE), float32(y*SCALE), color.RGBA{128, 128, 128, 100}, false)
-}
-func rmCube(screen *ebiten.Image, x int, y int) {
-	vector.DrawFilledRect(screen, float32(x), float32(y), float32(x*SCALE), float32(y*SCALE), color.Black, false)
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	for i := range g.grid {
 		for j := range g.grid[i] {
 			if g.grid[i][j] == true {
-				drawCube(screen, i, j)
+				vector.DrawFilledRect(screen, float32(i), float32(j), float32(i*SCALE), float32(j*SCALE), color.RGBA{128, 128, 128, 255}, false)
 			} else if g.grid[i][j] == false {
-				rmCube(screen, i, j)
+				vector.DrawFilledRect(screen, float32(i), float32(j), float32(i*SCALE), float32(j*SCALE), color.Black, false)
 			}
 		}
-	}
-
-	// Allow user to draw their own cells when paused
-	x, y := ebiten.CursorPosition()
-	if g.paused && ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) == true {
-		g.grid[x][y] = !g.grid[x][y]
 	}
 
 	if g.paused {
