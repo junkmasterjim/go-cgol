@@ -4,18 +4,20 @@
 package main
 
 import (
+	"image/color"
+	"log"
+	"math/rand/v2"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
-	"image/color"
-	"log"
-	"math/rand/v2"
 )
 
-const WIDTH int = 320
-const HEIGHT int = 240
+const WIDTH int = 240
+const HEIGHT int = 180
 const SCALE int = 8
+const TICK_SPEED int = 2
 
 type Game struct {
 	grid   [][]bool
@@ -64,8 +66,8 @@ func (g *Game) HandlePause() {
 
 	// Pause the game
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		// if key is pressed for longer than 2 game ticks
-		if inpututil.KeyPressDuration(ebiten.KeySpace) > 2 {
+		// if key is pressed for longer than TICK_SPEED game ticks
+		if inpututil.KeyPressDuration(ebiten.KeySpace) >= 5 {
 			g.paused = !g.paused
 		}
 	}
@@ -75,10 +77,11 @@ func (g *Game) Update() error {
 	// listen for pause (spacebar)
 	g.HandlePause()
 
+	//Main loop
 	if g.paused != true {
-		// Runs runs every 2 frames
+		// Runs runs every TICK_SPEED ticks
 		g.count++
-		if g.count >= 2 {
+		if g.count >= TICK_SPEED {
 			g.count = 0
 			//init new grid with same dimensions
 			width, height := len(g.grid), len(g.grid[0])
@@ -86,12 +89,10 @@ func (g *Game) Update() error {
 			for i := range newGrid {
 				newGrid[i] = make([]bool, height)
 			}
-
 			//Iterate over original grid and check if cell should live or die in next step
 			for i := range g.grid {
 				for j := range g.grid[i] {
 					liveNeighbors := g.CountLiveNeighbors(i, j)
-
 					if g.grid[i][j] {
 						//In the case where OG cell is alive
 						newGrid[i][j] = liveNeighbors == 2 || liveNeighbors == 3
@@ -104,20 +105,33 @@ func (g *Game) Update() error {
 			// set grid to equal our new grid state
 			g.grid = newGrid
 		}
-
 	}
+
 	return nil
+}
+
+func drawCube(screen *ebiten.Image, x int, y int) {
+	vector.DrawFilledRect(screen, float32(x), float32(y), float32(x*SCALE), float32(y*SCALE), color.RGBA{128, 128, 128, 100}, false)
+}
+func rmCube(screen *ebiten.Image, x int, y int) {
+	vector.DrawFilledRect(screen, float32(x), float32(y), float32(x*SCALE), float32(y*SCALE), color.Black, false)
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	for i := range g.grid {
 		for j := range g.grid[i] {
 			if g.grid[i][j] == true {
-				vector.DrawFilledRect(screen, float32(i), float32(j), float32(i*SCALE), float32(j*SCALE), color.RGBA{128, 128, 128, 100}, false)
+				drawCube(screen, i, j)
 			} else if g.grid[i][j] == false {
-				vector.DrawFilledRect(screen, float32(i), float32(j), float32(i*SCALE), float32(i*SCALE), color.Black, false)
+				rmCube(screen, i, j)
 			}
 		}
+	}
+
+	// Allow user to draw their own cells when paused
+	x, y := ebiten.CursorPosition()
+	if g.paused && ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) == true {
+		g.grid[x][y] = !g.grid[x][y]
 	}
 
 	if g.paused {
