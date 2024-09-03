@@ -110,7 +110,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for i := range g.grid {
 		for j := range g.grid[i] {
 			if g.grid[i][j] == true {
-				vector.DrawFilledRect(screen, float32(i), float32(j), float32(i*SCALE), float32(j*SCALE), color.White, false)
+				vector.DrawFilledRect(screen, float32(i), float32(j), float32(i*SCALE), float32(j*SCALE), color.RGBA{128, 128, 128, 100}, false)
 			} else if g.grid[i][j] == false {
 				vector.DrawFilledRect(screen, float32(i), float32(j), float32(i*SCALE), float32(i*SCALE), color.Black, false)
 			}
