@@ -1,5 +1,6 @@
 //TODO: add and delete cells with the mouse
 //TODO: zoom in and out with scroll wheel
+//NOTE: pause functionality needs some work. needs a precise input to pause / unpause
 
 package main
 
@@ -9,8 +10,13 @@ import (
 	"math/rand/v2"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
+
+const WIDTH int = 320
+const HEIGHT int = 240
+const SCALE int = 8
 
 type Game struct {
 	grid   [][]bool
@@ -63,6 +69,7 @@ func (g *Game) CheckPause() {
 }
 
 func (g *Game) Update() error {
+	// listen for pause (spacebar)
 	g.CheckPause()
 
 	if g.paused != true {
@@ -93,7 +100,6 @@ func (g *Game) Update() error {
 			}
 			// set grid to equal our new grid state
 			g.grid = newGrid
-
 		}
 
 	}
@@ -104,11 +110,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for i := range g.grid {
 		for j := range g.grid[i] {
 			if g.grid[i][j] == true {
-				vector.DrawFilledRect(screen, float32(i), float32(j), float32(i*2), float32(j*2), color.White, false)
+				vector.DrawFilledRect(screen, float32(i), float32(j), float32(i*SCALE), float32(j*SCALE), color.White, false)
 			} else if g.grid[i][j] == false {
-				vector.DrawFilledRect(screen, float32(i), float32(j), 2, 2, color.Black, false)
+				vector.DrawFilledRect(screen, float32(i), float32(j), float32(i*SCALE), float32(i*SCALE), color.Black, false)
 			}
 		}
+	}
+
+	if g.paused {
+		ebitenutil.DebugPrint(screen, "Paused")
 	}
 }
 
@@ -123,7 +133,6 @@ func NewGame(width, height int) *Game {
 	// init grid elements to randomly be true or false
 	for i := range g {
 		for j := range g[i] {
-
 			r := rand.IntN(2)
 			if r == 0 {
 				g[i][j] = false
@@ -140,12 +149,12 @@ func NewGame(width, height int) *Game {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 160, 120
+	return WIDTH, HEIGHT
 }
 
 func main() {
-	ebiten.SetWindowSize(960, 720)
-	game := NewGame(160, 120)
+	ebiten.SetWindowSize(WIDTH*(SCALE/2), HEIGHT*(SCALE/2))
+	game := NewGame(WIDTH, HEIGHT)
 	ebiten.SetWindowTitle("Conway's Game of Life")
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
