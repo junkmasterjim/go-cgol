@@ -1,3 +1,6 @@
+//TODO: add and delete cells with the mouse
+//TODO: zoom in and out with scroll wheel
+
 package main
 
 import (
@@ -10,8 +13,9 @@ import (
 )
 
 type Game struct {
-	grid  [][]bool
-	count int
+	grid   [][]bool
+	count  int
+	paused bool
 }
 
 func (g *Game) CountLiveNeighbors(x, y int) int {
@@ -43,34 +47,54 @@ func (g *Game) CountLiveNeighbors(x, y int) int {
 	return count
 }
 
+// TODO: Function for using mouse to draw / remove cells
+func (g *Game) AlterCells() {
+}
+
+// TODO: Function to zoom in and out on the grid
+func (g *Game) Zoom() {}
+
+func (g *Game) CheckPause() {
+	// Pause the game
+	//NOTE: this needs some work
+	if ebiten.IsKeyPressed(ebiten.KeySpace) {
+		g.paused = !g.paused
+	}
+}
+
 func (g *Game) Update() error {
-	// Runs runs every 2 frames
-	g.count++
-	if g.count >= 2 {
-		g.count = 0
-		//init new grid with same dimensions
-		width, height := len(g.grid), len(g.grid[0])
-		newGrid := make([][]bool, width)
-		for i := range newGrid {
-			newGrid[i] = make([]bool, height)
-		}
+	g.CheckPause()
 
-		//Iterate over original grid and check if cell should live or die in next step
-		for i := range g.grid {
-			for j := range g.grid[i] {
-				liveNeighbors := g.CountLiveNeighbors(i, j)
+	if g.paused != true {
+		// Runs runs every 2 frames
+		g.count++
+		if g.count >= 2 {
+			g.count = 0
+			//init new grid with same dimensions
+			width, height := len(g.grid), len(g.grid[0])
+			newGrid := make([][]bool, width)
+			for i := range newGrid {
+				newGrid[i] = make([]bool, height)
+			}
 
-				if g.grid[i][j] {
-					//In the case where OG cell is alive
-					newGrid[i][j] = liveNeighbors == 2 || liveNeighbors == 3
-				} else if !g.grid[i][j] {
-					// in the case where the OG cell is dead
-					newGrid[i][j] = liveNeighbors == 3
+			//Iterate over original grid and check if cell should live or die in next step
+			for i := range g.grid {
+				for j := range g.grid[i] {
+					liveNeighbors := g.CountLiveNeighbors(i, j)
+
+					if g.grid[i][j] {
+						//In the case where OG cell is alive
+						newGrid[i][j] = liveNeighbors == 2 || liveNeighbors == 3
+					} else if !g.grid[i][j] {
+						// in the case where the OG cell is dead
+						newGrid[i][j] = liveNeighbors == 3
+					}
 				}
 			}
+			// set grid to equal our new grid state
+			g.grid = newGrid
+
 		}
-		// set grid to equal our new grid state
-		g.grid = newGrid
 
 	}
 	return nil
