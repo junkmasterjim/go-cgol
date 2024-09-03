@@ -1,17 +1,16 @@
 //TODO: add and delete cells with the mouse
 //TODO: zoom in and out with scroll wheel
-//NOTE: pause functionality needs some work. needs a precise input to pause / unpause
 
 package main
 
 import (
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"image/color"
 	"log"
 	"math/rand/v2"
-
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 const WIDTH int = 320
@@ -60,17 +59,21 @@ func (g *Game) AlterCells() {
 // TODO: Function to zoom in and out on the grid
 func (g *Game) Zoom() {}
 
-func (g *Game) CheckPause() {
+func (g *Game) HandlePause() {
+	//NOTE: this isnt perfect but it works well enough
+
 	// Pause the game
-	//NOTE: this needs some work
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		g.paused = !g.paused
+		// if key is pressed for longer than 2 game ticks
+		if inpututil.KeyPressDuration(ebiten.KeySpace) > 2 {
+			g.paused = !g.paused
+		}
 	}
 }
 
 func (g *Game) Update() error {
 	// listen for pause (spacebar)
-	g.CheckPause()
+	g.HandlePause()
 
 	if g.paused != true {
 		// Runs runs every 2 frames
