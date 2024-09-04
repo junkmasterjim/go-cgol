@@ -20,9 +20,10 @@ const SCALE int = 12
 const TICK_SPEED int = 2
 
 type Game struct {
-	grid   [][]bool
-	count  int
-	paused bool
+	grid     [][]bool
+	count    int
+	paused   bool
+	editMode string
 }
 
 func (g *Game) CountLiveNeighbors(x, y int) int {
@@ -99,10 +100,25 @@ func (g *Game) Update() error {
 			g.grid = newGrid
 		}
 	} else if g.paused {
+		// allow user to swap between pencil & eraser mode when paused
+		if g.paused && inpututil.IsKeyJustPressed(ebiten.KeyE) {
+			switch g.editMode {
+			case "pencil":
+				g.editMode = "eraser"
+			case "eraser":
+				g.editMode = "pencil"
+			}
+		}
+
 		// Allow user to draw their own cells when paused
 		x, y := ebiten.CursorPosition()
 		if g.paused && ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) == true {
-			g.grid[x][y] = true
+			switch g.editMode {
+			case "pencil":
+				g.grid[x][y] = true
+			case "eraser":
+				g.grid[x][y] = false
+			}
 		}
 
 	}
@@ -122,7 +138,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	if g.paused {
-		ebitenutil.DebugPrint(screen, "Paused")
+		switch g.editMode {
+		case "pencil":
+			ebitenutil.DebugPrint(screen, "Paused \nClick & drag to add new cells \nPress E to switch to eraser")
+		case "eraser":
+			ebitenutil.DebugPrint(screen, "Paused \nClick & drag to remove cells \nPress E to switch to pencil")
+		}
 	}
 }
 
@@ -148,7 +169,10 @@ func NewGame(width, height int) *Game {
 
 	// return a pointer to the game with the new grid
 	return &Game{
-		grid: g,
+		grid:     g,
+		editMode: "pencil",
+		paused:   false,
+		count:    0,
 	}
 }
 
