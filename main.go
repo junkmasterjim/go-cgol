@@ -1,4 +1,3 @@
-//TODO: add and delete cells with the mouse
 //TODO: zoom in and out with scroll wheel
 
 package main
@@ -59,10 +58,8 @@ func (g *Game) CountLiveNeighbors(x, y int) int {
 func (g *Game) Zoom() {}
 
 func (g *Game) HandlePause() {
-	//NOTE: this isnt perfect but it works well enough
 	// Pause the game
 	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-		// if key is pressed for longer than 5 game ticks
 		g.paused = !g.paused
 	}
 }
@@ -122,7 +119,6 @@ func (g *Game) Update() error {
 		}
 
 	}
-
 	return nil
 }
 
@@ -136,6 +132,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 	}
+
+	// TODO: add zoom
 
 	if g.paused {
 		switch g.editMode {
